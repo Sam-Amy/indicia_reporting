@@ -1,0 +1,20 @@
+- find submissions to e.g. the vasuclar plant form  with zero abundance records
+--re: https://github.com/BiologicalRecordsCentre/iRecord/issues/1172
+
+-- first find title of vascular plant survey form
+select distinct(s.title), s.id
+from surveys s
+where title like '%Vascular%'; -- id = 325
+
+
+select sample_id, count(cof.id) as count_observations from cache_occurrences_functional cof 
+where cof.survey_id = '325'
+and cof.zero_abundance = TRUE
+group by cof.sample_id 
+
+select sample_id, count(cof.id) as count_observations from cache_occurrences_functional cof 
+where cof.survey_id = '325'
+and cof.sample_id in ('3175386','25122580')
+group by cof.sample_id
+
+-- There have been only two samples submitted via this form with observations where zero abundance = true; sample_id 3,175,386 (3 observations of four) and 25,122,580 (1 observation of 1)
