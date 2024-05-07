@@ -1,6 +1,6 @@
 # indicia_reporting
 
-Contains SQL and R script for summarising and extracting data from pgAdmin
+Contains SQL and R script for summarising and extracting data from the BRC Indicia data warehouse (via e.g. DBeaver)
 
 Requirements for all reports:
 AND cache_occurrences_functional.training = FALSE
