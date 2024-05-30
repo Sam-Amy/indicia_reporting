@@ -1,0 +1,11 @@
+-- count sample-level images by survey and year
+
+select extract(year from csf.date_start),s.title, s.id, sum(csf.media_count),
+	count(case when csf.media_count = 0 then csf.media_count else null end) as no_media, 
+	count(case when csf.media_count >0 then csf.media_count else null end) as with_media
+from cache_samples_functional csf 
+join surveys s on csf.survey_id = s.id
+where csf.website_id = 32
+and s.id in ('87','155','154')
+group by extract(year from csf.date_start), s.title, s.id
+order by s.title,extract(year from csf.date_start)
