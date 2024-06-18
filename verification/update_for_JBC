@@ -1,0 +1,99 @@
+-- Verification update for Jersey Biodiversity Centre
+
+
+-- verification roles; lists all verifiers who have a role defined for any of the Channel Islands
+
+SELECT DISTINCT f.id, u2.id user_id, f.title, ppl.surname, ppl.first_name, (ppl.surname || ', ' || ppl.first_name) AS name_display, ppl.email_address AS email_people, ui2.identifier AS email_identifiers, f.definition, f.created_on, f.updated_on, f.created_by_id, u1.username, f.deleted
+FROM filters f
+JOIN users u1 ON f.created_by_id = u1.id
+JOIN filters_users fu ON f.id = fu.filter_id
+JOIN users u2 ON fu.user_id = u2.id
+JOIN 
+	(SELECT uis.user_id, MAX(uis.id) AS uis_id
+	FROM user_identifiers uis
+	GROUP BY uis.user_id) AS ui
+	ON u2.id = ui.user_id
+JOIN user_identifiers ui2 ON ui.uis_id = ui2.id
+JOIN people ppl ON u2.person_id = ppl.id 
+WHERE (f.created_by_id = 1 OR f.created_by_id = 5 OR f.created_by_id = 102855 OR f.created_by_id = 137484 OR f.created_by_id = 327010) 
+	AND f.sharing = 'V' 
+	AND f.website_id=23 
+	AND f.deleted = false
+	AND (f.title like ('%JBC%')
+		or f.title like ('%Guernsey%')
+		or f.title like ('%Sark%')
+		or f.title like ('%Alderney%')
+		or f.title like ('%Channel Isles%')
+		or f.title like ('%Channel Islands%')
+		or f.title like ('%Jersey%'))
+ORDER BY f.created_on desc;
+
+-- verification by taxon group; tables for JBC data and for data from all other sources, based on data for Jersey only
+-- first check which websites are sharing for verification with iRecord
+select string_agg(from_website_id::text, ', ' order by from_website_id) from index_websites_website_agreements where to_website_id=23 and provide_for_verification=TRUE
+
+-- Records from JBC website only (website_id = 108)
+SELECT taxon_groups.title taxon_group, l.name LERC_boundary, count(cof.id) AS total,  
+count(case when cof.record_status='V' then cof.id else null end) as verified, 
+count(case when cof.record_status='R' then cof.id else null end) as rejected, 
+count(case when cof.record_status='C' and (cof.record_substatus <> 3 OR cof.record_substatus IS NULL) then cof.id else null end) as awaiting_review, 
+count(case when cof.record_status='C' and cof.record_substatus = 3 then cof.id else null end) as plausible
+FROM cache_occurrences_functional cof
+JOIN locations l
+ON cof.location_ids && array[l.id]
+JOIN taxon_groups
+ON cof.taxon_group_id = taxon_groups.id
+WHERE cof.training = FALSE
+AND l.location_type_id=1370 -- LERC boundaries
+and l.name =('Jersey Biodiversity Centre') --JBC data only (website_ID = 108)
+AND (cof.record_status = 'C'
+     OR cof.record_status = 'V'
+     OR cof.record_status = 'R')
+AND cof.website_id in (108)
+GROUP BY taxon_groups.title, l.name
+order by taxon_groups.title
+
+-- Records from all websites except JBC (website_id = 108)
+SELECT taxon_groups.title taxon_group, l.name LERC_boundary, count(cof.id) AS total,  
+count(case when cof.record_status='V' then cof.id else null end) as verified, 
+count(case when cof.record_status='R' then cof.id else null end) as rejected, 
+count(case when cof.record_status='C' and (cof.record_substatus <> 3 OR cof.record_substatus IS NULL) then cof.id else null end) as awaiting_review, 
+count(case when cof.record_status='C' and cof.record_substatus = 3 then cof.id else null end) as plausible
+FROM cache_occurrences_functional cof
+JOIN locations l
+ON cof.location_ids && array[l.id]
+JOIN taxon_groups
+ON cof.taxon_group_id = taxon_groups.id
+WHERE cof.training = FALSE
+AND l.location_type_id=1370 -- LERC boundaries
+and l.name =('Jersey Biodiversity Centre')
+AND (cof.record_status = 'C'
+     OR cof.record_status = 'V'
+     OR cof.record_status = 'R')
+AND cof.website_id in (3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 23, 24, 25, 27, 28, 29, 30, 32, 33, 34, 40, 41, 42, 43, 44, 47, 49, 51, 54, 59, 65, 68, 69, 71, 72, 73, 75, 83, 87, 92, 97, 98, 101, 109, 112, 115, 119, 120, 123, 124, 127, 128, 129, 131, 132, 133, 135, 139, 141, 142, 143, 145, 147, 148, 150, 151, 152, 155, 160)
+GROUP BY taxon_groups.title, l.name
+order by taxon_groups.title
+
+
+-- verification by verifier;number of records for Jersey that each verifier has reviewed (this includes the UK-based verifiers, so is a longer list than the one for CI-specific verification roles)
+
+-- Provides indication of number of records verified within the JBC boundary by each verifier
+
+SELECT con.verifier, l.name LERC_boundary, count(cof.id) AS total,  
+count(case when cof.record_status='V' then cof.id else null end) as verified, 
+count(case when cof.record_status='R' then cof.id else null end) as rejected, 
+count(case when cof.record_status='C' and (cof.record_substatus <> 3 OR cof.record_substatus IS NULL) then cof.id else null end) as awaiting_review, 
+count(case when cof.record_status='C' and cof.record_substatus = 3 then cof.id else null end) as plausible
+FROM cache_occurrences_functional cof
+JOIN cache_occurrences_nonfunctional con on con.id = cof.id
+JOIN locations l ON cof.location_ids && array[l.id]
+JOIN taxon_groups ON cof.taxon_group_id = taxon_groups.id
+WHERE cof.training = FALSE
+AND l.location_type_id=1370 -- LERC boundaries
+and l.name =('Jersey Biodiversity Centre')
+AND (cof.record_status = 'C'
+     OR cof.record_status = 'V'
+     OR cof.record_status = 'R')
+AND cof.website_id in (3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 23, 24, 25, 27, 28, 29, 30, 32, 33, 34, 40, 41, 42, 43, 44, 47, 49, 51, 54, 59, 65, 68, 69, 71, 72, 73, 75, 83, 87, 92, 97, 98, 101, 108, 109, 112, 115, 119, 120, 123, 124, 127, 128, 129, 131, 132, 133, 135, 139, 141, 142, 143, 145, 147, 148, 150, 151, 152, 155, 160)
+GROUP BY con.verifier, l.name
+order by con.verifier
