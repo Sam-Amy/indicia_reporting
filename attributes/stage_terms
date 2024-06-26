@@ -1,0 +1,8 @@
+-- explore the use of different stage terms for certain taxa
+
+select con.attr_stage, csn.survey_title, count (cof.id) from cache_occurrences_functional cof 
+join cache_occurrences_nonfunctional con on cof.id = con.id 
+join cache_samples_nonfunctional csn on csn.id = cof.sample_id
+join cache_taxa_taxon_lists cttl on cttl.id = cof.taxa_taxon_list_id
+where cttl.taxon_group in ('flowering plant','fern','conifer','ginkgo','stonewort','clubmoss','quillwort','horsetail') -- this example for vascular plants
+group by con.attr_stage, csn.survey_title
