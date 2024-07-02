@@ -1,0 +1,65 @@
+
+-- get all occurences with % cover for a single plot -- Inventory and indicator
+select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,  cttl.preferred_taxon, terms.term as domin 
+from cache_occurrences_functional cof
+join samples s on s.id = cof.sample_id
+join cache_taxa_taxon_lists cttl on cttl.id=cof.preferred_taxa_taxon_list_id
+LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id  
+		AND oav.deleted=false 
+	LEFT join occurrence_attributes oa on oa.id=oav.occurrence_attribute_id 
+		AND oa.id = 214 and oav.deleted=false -- NOTE DIFFERENCE HERE
+	LEFT join termlists_terms tt on tt.id=oav.int_value and tt.deleted=false 
+	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
+	where cof.survey_id in (154,155) and cof.training = 'f'
+and cof.record_status in ('V','C') -- add this row to exclude rejected records
+and cof.location_ID = 163878  -- add as required to return specific plot
+
+select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,  cttl.preferred_taxon, oav.int_value as domin  
+from cache_occurrences_functional cof
+join samples s on s.id = cof.sample_id
+join cache_taxa_taxon_lists cttl on cttl.id=cof.preferred_taxa_taxon_list_id
+LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id  
+		AND oav.deleted=false 
+	LEFT join occurrence_attributes oa on oa.id=oav.occurrence_attribute_id 
+		AND oa.id = 214 and oav.deleted=false -- NOTE DIFFERENCE HERE
+	LEFT join termlists_terms tt on tt.id=oav.int_value and tt.deleted=false 
+	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
+	where cof.survey_id in (154,155) and cof.training = 'f'
+and cof.record_status in ('V','C') -- add this row to exclude rejected records
+limit 1000;
+
+
+--get sample attributes for single location
+select sav.id sample_attribute_id, s.id sample_id, sa.caption, text_value
+from samples s, sample_attributes sa, sample_attribute_values sav
+where s.id = sav.sample_id
+and sav.sample_attribute_id = sa.id
+AND s.survey_id in (87,154,155)
+and s.date_start between '2015-01-01' and '2023-12-31'
+and s.deleted = 'f' and s.training = 'f'
+and text_value is not null
+UNION
+select sav.id sample_attribute_id, s.id sample_id, sa.caption, int_value::text -- int_value updated 2022 -- see https://github.com/BiologicalRecordsCentre/NPMS/issues/232
+from samples s, sample_attributes sa, sample_attribute_values sav
+where s.id = sav.sample_id
+and sav.sample_attribute_id = sa.id
+AND s.survey_id in (87,154,155)
+and s.date_start between '2015-01-01' and '2023-12-31'
+and s.deleted = 'f' and s.training = 'f'
+and int_value is not null
+and termlist_id is null
+UNION
+select sav.id sample_attribute_id, s.id sample_id, sa.caption, t.term
+from samples s, sample_attributes sa, sample_attribute_values sav, termlists_terms tt, terms t
+where s.id = sav.sample_id
+and sav.sample_attribute_id = sa.id
+and tt.termlist_id = sa.termlist_id
+and tt.id = sav.int_value
+and t.id = tt.term_id
+AND s.survey_id in (87,154,155)
+and s.date_start between '2015-01-01' and '2023-12-31'
+and s.deleted = 'f' and s.training = 'f'
+and int_value is not null
+and sa.termlist_id is not null
+and s.location_id = 163878
+order by sample_attribute_id, sample_id;
