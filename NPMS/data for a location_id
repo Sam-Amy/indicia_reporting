@@ -1,7 +1,8 @@
+
 -- NPMS code to help with verification
 
 -- get all occurences with % cover for a single plot (location_id) -- Inventory (154) and indicator (155)
-select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,  cttl.preferred_taxon, terms.term as domin 
+select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.location_id,s.entered_sref_system, s.entered_sref, cof.date_start,s.recorder_names,cttl.preferred_taxon, terms.term as domin 
 from cache_occurrences_functional cof
 join samples s on s.id = cof.sample_id
 join cache_taxa_taxon_lists cttl on cttl.id=cof.preferred_taxa_taxon_list_id
@@ -13,7 +14,10 @@ LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id
 	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
 	where cof.survey_id in (154,155) and cof.training = 'f'
 and cof.record_status in ('V','C') -- add this row to exclude rejected records
-and cof.location_ID = 165362
+and cof.location_ID = 203704
+-- and s.entered_sref = 'J3605328859'
+--and extract(year from cof.created_on) = '2021'
+order by cttl.preferred_taxon, cof.date_start
 
 
 select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,  cttl.preferred_taxon, oav.int_value as domin  
@@ -28,42 +32,53 @@ LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id
 	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
 	where cof.survey_id in (87) and cof.training = 'f'
 and cof.record_status in ('V','C') -- add this row to exclude rejected records
-and cof.location_ID =   
+and cof.location_ID =  159369 
+order by cttl.preferred_taxon, cof.date_start;
 
 
 --get sample attributes for single plot (location_id)
 select s.location_id, s.date_start, sav.id sample_attribute_id, s.id sample_id, sa.caption, text_value
-from samples s, sample_attributes sa, sample_attribute_values sav
-where s.id = sav.sample_id
-and sav.sample_attribute_id = sa.id
-AND s.survey_id in (87,154,155)
-and s.date_start between '2015-01-01' and '2023-12-31'
-and s.deleted = 'f' and s.training = 'f'
-and text_value is not null
-and s.location_id = 165362
+	from samples s, sample_attributes sa, sample_attribute_values sav
+		where s.id = sav.sample_id
+		and sav.sample_attribute_id = sa.id
+		AND s.survey_id in (87,154,155)
+		and s.date_start > '2015-01-01'
+		and s.deleted = 'f' and s.training = 'f'
+		and text_value is not null
+		and s.location_id = 159369
 UNION
 select s.location_id, s.date_start, sav.id sample_attribute_id, s.id sample_id, sa.caption, int_value::text -- int_value updated 2022 -- see https://github.com/BiologicalRecordsCentre/NPMS/issues/232
-from samples s, sample_attributes sa, sample_attribute_values sav
-where s.id = sav.sample_id
-and sav.sample_attribute_id = sa.id
-AND s.survey_id in (87,154,155)
-and s.date_start between '2015-01-01' and '2023-12-31'
-and s.deleted = 'f' and s.training = 'f'
-and int_value is not null
-and termlist_id is null
-and s.location_id = 165362
+	from samples s, sample_attributes sa, sample_attribute_values sav
+		where s.id = sav.sample_id
+		and sav.sample_attribute_id = sa.id
+		AND s.survey_id in (87,154,155)
+		and s.date_start > '2015-01-01' 
+		and s.deleted = 'f' and s.training = 'f'
+		and int_value is not null
+		and termlist_id is null
+		and s.location_id = 159369
 union
 select s.location_id, s.date_start, sav.id sample_attribute_id, s.id sample_id, sa.caption, t.term
-from samples s, sample_attributes sa, sample_attribute_values sav, termlists_terms tt, terms t
-where s.id = sav.sample_id
-and sav.sample_attribute_id = sa.id
-and tt.termlist_id = sa.termlist_id
-and tt.id = sav.int_value
-and t.id = tt.term_id
-AND s.survey_id in (87,154,155)
-and s.date_start between '2015-01-01' and '2023-12-31'
+	from samples s, sample_attributes sa, sample_attribute_values sav, termlists_terms tt, terms t
+		where s.id = sav.sample_id
+		and sav.sample_attribute_id = sa.id
+		and tt.termlist_id = sa.termlist_id
+		and tt.id = sav.int_value
+		and t.id = tt.term_id
+		AND s.survey_id in (87,154,155)
+		and s.date_start > '2015-01-01' 
+		and s.deleted = 'f' and s.training = 'f'
+		and int_value is not null
+		and sa.termlist_id is not null
+		and s.location_id = 159369;
+
+-- get comments for single plot (location_id)
+select s.location_id, s.id, s.recorder_names, s.date_start, s.comment
+from samples s
+where s.survey_id in (87,154,155)
+and s.date_start > '2015-01-01'
 and s.deleted = 'f' and s.training = 'f'
-and int_value is not null
-and sa.termlist_id is not null
-and s.location_id = 165362
-order by sample_attribute_id, sample_id;
+and s.location_id = 203704
+order by s.id;
+
+
