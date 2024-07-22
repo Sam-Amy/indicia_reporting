@@ -73,12 +73,11 @@ select s.location_id, s.date_start, sav.id sample_attribute_id, s.id sample_id, 
 		and s.location_id = 159369;
 
 -- get comments for single plot (location_id)
-select s.location_id, s.id, s.recorder_names, s.date_start, s.comment
+select s.location_id, s.date_start,s.recorder_names, s.id sample_id, s."comment"
 from samples s
 where s.survey_id in (87,154,155)
-and s.date_start > '2015-01-01'
+and s.date_start between '2015-01-01' and '2023-12-31'
 and s.deleted = 'f' and s.training = 'f'
 and s.location_id = 203704
-order by s.id;
-
+order by sample_id;
 
