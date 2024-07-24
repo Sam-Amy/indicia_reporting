@@ -1,4 +1,4 @@
---- aiim to find names of NPMS recorders against total number of records of vascular plants
+--- find names of NPMS recorders against total number of records of vascular plants
 select * from websites where title like ('%National Plant%')
 
 select distinct Recorders from cache_occurrences_functional cof 
@@ -9,3 +9,5 @@ select count(cof.id), cof.Recorders from cache_occurrences_functional cof
 join cache_samples_nonfunctional csn on cof.sample_id = csn.id
 join taxa
 where cof.website_id = 32
+
+--
