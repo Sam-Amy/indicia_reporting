@@ -2,16 +2,15 @@
 -- NPMS code to help with verification
 
 -- get all occurences with % cover for a single plot (location_id) -- Inventory (154) and indicator (155)
--- note that where different survey types have been used for a location, you'll need to run both the first two chunks of code to see the two sets of species/cover data
-
-select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.location_id,s.entered_sref_system, s.entered_sref, cof.date_start,s.recorder_names,cttl.preferred_taxon, terms.term as domin 
+-- note that where different survey types have been used for a location, you may need to run both the first two chunks of code to see the two sets of species/cover data (wildflower is different)
+select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.location_id,s.entered_sref_system, s.entered_sref, cof.date_start,s.recorder_names,cttl.preferred_taxon, terms.term as domin -- NOTE DIFFERENCE HERE
 from cache_occurrences_functional cof
 join samples s on s.id = cof.sample_id
 join cache_taxa_taxon_lists cttl on cttl.id=cof.preferred_taxa_taxon_list_id
 LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id  
 		AND oav.deleted=false 
 	LEFT join occurrence_attributes oa on oa.id=oav.occurrence_attribute_id 
-		AND oa.id = 214 and oav.deleted=false -- NOTE DIFFERENCE HERE
+		AND oa.id = 214 and oav.deleted=false 
 	LEFT join termlists_terms tt on tt.id=oav.int_value --and tt.deleted=false 
 	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
 	where cof.survey_id in (154,155) and cof.training = 'f'
@@ -22,15 +21,14 @@ and cof.location_ID = 135255
 order by cttl.preferred_taxon, cof.date_start
 
 -- get all occurences with % cover for a single plot (location_id) -- Wildflower (87)
--- note that where different survey types have been used for a location, you'll need to run both the first two chunks of code to see the two sets of species/cover data
-select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,cttl.preferred_taxon, oav.int_value as domin  
+select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,cttl.preferred_taxon, oav.int_value as domin  -- NOTE DIFFERENCE HERE
 from cache_occurrences_functional cof
 join samples s on s.id = cof.sample_id
 join cache_taxa_taxon_lists cttl on cttl.id=cof.preferred_taxa_taxon_list_id
 LEFT join occurrence_attribute_values oav on oav.occurrence_id = cof.id  
 		AND oav.deleted=false 
 	LEFT join occurrence_attributes oa on oa.id=oav.occurrence_attribute_id 
-		AND oa.id = 214 and oav.deleted=false -- NOTE DIFFERENCE HERE
+		AND oa.id = 214 and oav.deleted=false
 	LEFT join termlists_terms tt on tt.id=oav.int_value and tt.deleted=false 
 	LEFT join terms terms on terms.id = tt.term_id AND terms.deleted=false 
 	where cof.survey_id in (87) and cof.training = 'f'
