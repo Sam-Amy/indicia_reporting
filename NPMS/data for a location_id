@@ -2,6 +2,8 @@
 -- NPMS code to help with verification
 
 -- get all occurences with % cover for a single plot (location_id) -- Inventory (154) and indicator (155)
+-- note that where different survey types have been used for a location, you'll need to run both the first two chunks of code to see the two sets of species/cover data
+
 select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.location_id,s.entered_sref_system, s.entered_sref, cof.date_start,s.recorder_names,cttl.preferred_taxon, terms.term as domin 
 from cache_occurrences_functional cof
 join samples s on s.id = cof.sample_id
@@ -20,6 +22,7 @@ and cof.location_ID = 135255
 order by cttl.preferred_taxon, cof.date_start
 
 -- get all occurences with % cover for a single plot (location_id) -- Wildflower (87)
+-- note that where different survey types have been used for a location, you'll need to run both the first two chunks of code to see the two sets of species/cover data
 select cof.id, cof.survey_id, s.created_by_id, s.created_on, cof.date_start, cof.location_id,s.entered_sref_system, s.entered_sref,cttl.preferred_taxon, oav.int_value as domin  
 from cache_occurrences_functional cof
 join samples s on s.id = cof.sample_id
